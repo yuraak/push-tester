@@ -16,32 +16,38 @@ const useDetailedGameHistory = () => {
     const [validationErrors, setValidationErrors] = useState(null);
     const [isValid, setIsValid] = useState(null);
     const [paramValidationErrors, setParamValidationErrors] = useState([]);
+    const [requestId, setRequestId] = useState(uuidv4()); // Initialize with a UUID
+    const [inputChanged, setInputChanged] = useState(false); // Track input changes
 
     useEffect(() => {
         document.title = 'DGH PUSHER'; // Set the tab title
     }, []);
 
+    const generateRequest = (details) => {
+        return {
+            gsId: details._meta.gsId,
+            gpId: "pop",
+            requestId: requestId, // Use the current UUID
+            command: "PTC_GetDetailedGameHistory",
+            data: {
+                playerId: details.playerId,
+                skinId: details.skinId,
+                gameId: details.gameId,
+                gameCycleId: details.gameCycleId,
+                gameCycleFinishDateTime: details.gameCycleFinishDateTime,
+                localeCode: details.localeCode
+            }
+        };
+    };
+
     const handleLogChange = (e) => {
         const log = e.target.value;
         setTransactionLog(log);
+        setInputChanged(true); // Mark input as changed
         try {
             const details = JSON.parse(log);
             console.log('Parsed Details:', details); // Log parsed details
-            const request = {
-                gsId: details._meta.gsId,
-                gpId: "pop",
-                requestId: uuidv4(), // Generate a UUID for each request
-                command: "PTC_GetDetailedGameHistory",
-                data: {
-                    playerId: details.playerId,
-                    skinId: details.skinId,
-                    gameId: details.gameId,
-                    gameCycleId: details.gameCycleId,
-                    gameCycleFinishDateTime: details.gameCycleFinishDateTime,
-                    localeCode: details.localeCode
-                }
-            };
-            console.log('Formatted Request:', request); // Log formatted request
+            const request = generateRequest(details);
             setFormattedRequest(request);
         } catch (error) {
             console.error('Failed to parse transaction log:', error);
@@ -51,6 +57,7 @@ const useDetailedGameHistory = () => {
 
     const handleEndpointChange = (e) => {
         setEndpoint(e.target.value);
+        setInputChanged(true); // Mark input as changed
     };
 
     const validateParamValues = (response) => {
@@ -58,7 +65,7 @@ const useDetailedGameHistory = () => {
         const validations = [
             { field: 'gsId', message: `gsId should be ${formattedRequest.gsId}`, actual: response.gsId, expected: formattedRequest.gsId },
             { field: 'gpId', message: `gpId should be ${formattedRequest.gpId}`, actual: response.gpId, expected: formattedRequest.gpId },
-            { field: 'requestId', message: `requestId should be ${formattedRequest.requestId}`, actual: response.requestId, expected: formattedRequest.requestId }
+            { field: 'requestId', message: `requestId should be ${requestId}`, actual: response.requestId, expected: requestId } // Use requestId state
         ];
         validations.forEach(validation => {
             if (validation.actual !== validation.expected) {
@@ -77,10 +84,25 @@ const useDetailedGameHistory = () => {
             setResponse(null); // Clear previous response
             setIframeUrl(''); // Clear previous iframe URL
 
+            if (!inputChanged) {
+                // Generate a new UUID for the request if the input hasn't changed
+                const newRequestId = uuidv4();
+                setRequestId(newRequestId); // Update the requestId state
+                setFormattedRequest(prevRequest => ({
+                    ...prevRequest,
+                    requestId: newRequestId // Update the request preview with new UUID
+                }));
+            }
+
+            const updatedRequest = {
+                ...formattedRequest,
+                requestId: requestId // Use the current UUID
+            };
+
             console.log('Sending Request to Endpoint: http://localhost:3000/backend/dgh-request'); // Log the endpoint
 
             const res = await axios.post('http://localhost:3000/backend/dgh-request', {
-                request: formattedRequest,
+                request: updatedRequest,
                 endpoint
             });
             console.log('Response:', res.data); // Log the response
@@ -100,6 +122,8 @@ const useDetailedGameHistory = () => {
                 const paramErrors = validateParamValues(res.data);
                 setParamValidationErrors(paramErrors);
             }
+
+            setInputChanged(false); // Mark input as unchanged after request is sent
         } catch (error) {
             console.error('Failed to send request:', error);
             setError(error.message || 'Failed to send request');

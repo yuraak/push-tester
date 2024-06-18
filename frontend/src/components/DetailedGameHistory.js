@@ -7,6 +7,7 @@ import ValidationAlerts from './ValidationAlerts';
 
 const DetailedGameHistory = () => {
     const {
+        transactionLog,
         endpoint,
         formattedRequest,
         response,
@@ -41,7 +42,9 @@ const DetailedGameHistory = () => {
                 margin="normal"
             />
             <RequestPreview endpoint={endpoint} formattedRequest={formattedRequest} />
-            <Button variant="contained" color="primary" onClick={sendRequest}>Send Request to Endpoint</Button>
+            <Button variant="contained" color="primary" onClick={sendRequest}>
+                {transactionLog && !error ? 'Generate and Send New Request' : 'Send Request'}
+            </Button>
             {error && (
                 <Alert severity="error" style={{ marginTop: '20px' }}>
                     {error}

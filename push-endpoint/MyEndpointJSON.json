@@ -1,10 +1,10 @@
 {
     "gsId": "162",
     "gpId": "pop",
-    "requestId": "testRequestId",
+    "requestId": "74decaf8-249e-4c18-9611-529f3d7992ba",
     "command": "PTC_GetDetailedGameHistoryAck",
     "data": {
         "ttlSeconds": 60,
-        "url": "http://domain.com/game/history/url?token=123"
+        "url": "https://gamehistory.rubyplay.io/development/rp_650/latest/index.html?historyURL=https%253A%252F%252Fasia.test.rubyplay.io%252Fgame-history%253Ftoken%253DeyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI3OWJhMWJhOGUxMDQ0OTAwYjM0YjI0ZTYwMDFmYWEyYSJ9._aC15X3QWBorzi5Z3GjjA_AIK_nycnzpHeLWCm3VesX7dtpg2-5IkjtxskYLNZf3rKexIBRpHkmJ8F2rOiDfmQ&lang=en&showSummary=false"
     }
 }

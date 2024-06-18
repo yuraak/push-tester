@@ -1,0 +1,10 @@
+{
+    "gsId": "162",
+    "gpId": "pop",
+    "requestId": "testRequestId",
+    "command": "PTC_GetDetailedGameHistoryAck",
+    "data": {
+        "ttlSeconds": 60,
+        "url": "http://domain.com/game/history/url?token=123"
+    }
+}

@@ -2,25 +2,24 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import Ajv from 'ajv';
-import detailedGameHistoryResponseSchema from './detailedGameHistoryResponseSchema';
+import dghResponseSchema from '../schemas/dghResponseSchema';
 
-const ajv = new Ajv();
+const ajv = new Ajv({ allErrors: true, verbose: true });
 
-const useDetailedGameHistory = () => {
+const useDGH = () => {
     const [transactionLog, setTransactionLog] = useState('');
     const [endpoint, setEndpoint] = useState('');
     const [formattedRequest, setFormattedRequest] = useState({});
     const [response, setResponse] = useState(null);
-    const [iframeUrl, setIframeUrl] = useState('');
     const [error, setError] = useState(null);
     const [validationErrors, setValidationErrors] = useState(null);
     const [isValid, setIsValid] = useState(null);
-    const [paramValidationErrors, setParamValidationErrors] = useState([]);
     const [requestId, setRequestId] = useState(uuidv4());
     const [inputChanged, setInputChanged] = useState(false);
+    const [history, setHistory] = useState([]); // State to store request-response history
 
     useEffect(() => {
-        document.title = 'DGH PUSHER'; // Set the tab title
+        document.title = 'DGH PUSHER';
     }, []);
 
     const generateRequest = (details) => {
@@ -59,31 +58,13 @@ const useDetailedGameHistory = () => {
         setInputChanged(true);
     };
 
-    const validateParamValues = (response) => {
-        const errors = [];
-        const validations = [
-            { field: 'gsId', message: `gsId should be ${formattedRequest.gsId}`, actual: response.gsId, expected: formattedRequest.gsId },
-            { field: 'gpId', message: `gpId should be ${formattedRequest.gpId}`, actual: response.gpId, expected: formattedRequest.gpId },
-            { field: 'requestId', message: `requestId should be ${requestId}`, actual: response.requestId, expected: requestId }
-        ];
-        validations.forEach(validation => {
-            if (validation.actual !== validation.expected) {
-                errors.push(validation);
-            }
-        });
-        return errors;
-    };
-
     const sendRequest = async () => {
         try {
             setError(null);
             setValidationErrors(null);
             setIsValid(null);
-            setParamValidationErrors([]);
             setResponse(null);
-            setIframeUrl('');
 
-            // Generate a new UUID for the request if the input hasn't changed
             if (!inputChanged) {
                 const newRequestId = uuidv4();
                 setRequestId(newRequestId);
@@ -98,31 +79,44 @@ const useDetailedGameHistory = () => {
                 requestId: requestId
             };
 
-            // Send the request to the proxy server instead of directly to the target API
             const res = await axios.post('http://localhost:3002/proxy', {
-                endpoint: endpoint, // The actual endpoint to forward to
-                data: updatedRequest // The data to send
+                endpoint: endpoint,
+                data: updatedRequest
             });
 
             console.log('Response:', res.data);
 
-            // Validate the response against the schema
-            const valid = ajv.validate(detailedGameHistoryResponseSchema, res.data);
+            // JSON schema validation
+            const valid = ajv.validate(dghResponseSchema, res.data);
             setResponse(res.data);
+            setIsValid(valid); // Set isValid based on validation result
             if (!valid) {
-                setValidationErrors(ajv.errors);
-                setIsValid(false);
+                const detailedErrors = ajv.errors.map((error) => {
+                    const parameter = error.instancePath.split('/').pop();
+                    let explanation = `Error in "${parameter}": ${error.message}`;
+                    return explanation;
+                });
+                setValidationErrors(detailedErrors);
             } else {
                 setValidationErrors(null);
-                setIsValid(true);
-                setIframeUrl(res.data.data.url);
 
-                // Validate parameter values
-                const paramErrors = validateParamValues(res.data);
-                setParamValidationErrors(paramErrors);
+                // Open the URL in a popup window
+                if (res.data.data && res.data.data.url) {
+                    window.open(
+                        res.data.data.url,
+                        '_blank',
+                        'width=800,height=600,resizable,scrollbars=yes,status=yes'
+                    );
+                }
             }
 
-            setInputChanged(false); // Mark input as unchanged after request is sent
+            // Add request-response pair to history and keep only the last 10 entries
+            setHistory(prevHistory => [
+                ...prevHistory.slice(-9), // Keep the last 9 entries
+                { request: updatedRequest, response: res.data, isValid: valid }
+            ]);
+
+            setInputChanged(false);
         } catch (error) {
             console.error('Failed to send request:', error);
             setError(error.response ? error.response.data : 'Request failed');
@@ -137,12 +131,11 @@ const useDetailedGameHistory = () => {
         error,
         isValid,
         validationErrors,
-        paramValidationErrors,
-        iframeUrl,
+        history, // Return history for display
         handleLogChange,
         handleEndpointChange,
         sendRequest
     };
 };
 
-export default useDetailedGameHistory;
+export default useDGH;

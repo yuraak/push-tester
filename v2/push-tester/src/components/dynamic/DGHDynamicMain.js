@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Typography, TextField, Button, Alert, Paper, Box, Stack } from '@mui/material';
+import { Container, Typography, TextField, Button, Alert, Paper, Box, Stack, Switch, FormControlLabel } from '@mui/material';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import Ajv from 'ajv';
@@ -33,30 +33,48 @@ const DGHDynamicMain = () => {
     const [isValid, setIsValid] = useState(null);
     const [history, setHistory] = useState([]);
     const [nextRequestId, setNextRequestId] = useState(uuidv4());
+    const [isV2, setIsV2] = useState(false);
+
+    const mapV1Request = useCallback((details) => ({
+        gsId: details._meta.gsId,
+        gpId: "pop",
+        requestId: nextRequestId,
+        command: "PTC_GetDetailedGameHistory",
+        data: {
+            playerId: details.playerId,
+            skinId: details.skinId,
+            gameId: details.gameId,
+            gameCycleId: details.gameCycleId,
+            gameCycleFinishDateTime: details.gameCycleFinishDateTime,
+            localeCode: details.localeCode
+        }
+    }), [nextRequestId]);
+
+    const mapV2Request = useCallback((details) => ({
+        gsId: details.rgsId,
+        gpId: "pop",
+        requestId: nextRequestId,
+        command: "PTC_GetDetailedGameHistory",
+        data: {
+            playerId: details.player,
+            skinId: details.casino,
+            gameId: details.gameCycleData.gameId,
+            gameCycleId: details.gameCycleData.id,
+            gameCycleFinishDateTime: details.gameCycleFinishData.endTimestamp,
+            localeCode: "en"
+        }
+    }), [nextRequestId]);
 
     const updateRequestPreview = useCallback(() => {
         try {
             const details = JSON.parse(transactionLog);
-            const request = {
-                gsId: details._meta.gsId,
-                gpId: "pop",
-                requestId: nextRequestId,
-                command: "PTC_GetDetailedGameHistory",
-                data: {
-                    playerId: details.playerId,
-                    skinId: details.skinId,
-                    gameId: details.gameId,
-                    gameCycleId: details.gameCycleId,
-                    gameCycleFinishDateTime: details.gameCycleFinishDateTime,
-                    localeCode: details.localeCode
-                }
-            };
+            const request = isV2 ? mapV2Request(details) : mapV1Request(details);
             setFormattedRequest(request);
         } catch (error) {
             console.error('Failed to parse transaction log:', error);
             setFormattedRequest({});
         }
-    }, [transactionLog, nextRequestId]);
+    }, [transactionLog, isV2, mapV1Request, mapV2Request]);
 
     useEffect(() => {
         document.title = 'DGH PUSHER';
@@ -107,20 +125,16 @@ const DGHDynamicMain = () => {
         setHistory([]);
     };
 
+    const clearInput = () => {
+        setTransactionLog('');
+        setEndpoint('');
+        setFormattedRequest({});
+    };
+
     const reopenIframe = () => {
         if (response && response.data && response.data.url) {
             window.open(response.data.url, '_blank', 'width=800,height=600,noopener,noreferrer');
         }
-    };
-
-    // New function to clear the preview
-    const clearPreview = () => {
-        setTransactionLog('');
-        setFormattedRequest({});
-        setEndpoint('');
-        setError(null);
-        setIsValid(null);
-        setResponse(null);
     };
 
     const renderTitle = (text) => (
@@ -132,6 +146,15 @@ const DGHDynamicMain = () => {
     return (
         <Container>
             <Typography variant="h4" gutterBottom style={{ marginBottom: '20px' }}>DGH Pusher</Typography>
+            <Box display="flex" alignItems="center" marginBottom="20px">
+                <FormControlLabel
+                    control={<Switch checked={isV2} onChange={(e) => setIsV2(e.target.checked)} />}
+                    label={`TPI ${isV2 ? 'v2' : 'v1'}`}
+                />
+                <Button variant="outlined" color="secondary" onClick={clearInput} style={{ marginLeft: '10px' }}>
+                    Clear Input Data
+                </Button>
+            </Box>
             <TextField
                 label="Transaction Log"
                 name="transactionLog"
@@ -140,9 +163,7 @@ const DGHDynamicMain = () => {
                 multiline
                 variant="outlined"
                 fullWidth
-                InputLabelProps={{
-                    shrink: true,
-                }}
+                InputLabelProps={{ shrink: true }}
                 style={{ marginBottom: '20px' }}
             />
             <TextField
@@ -152,9 +173,7 @@ const DGHDynamicMain = () => {
                 value={endpoint}
                 variant="outlined"
                 fullWidth
-                InputLabelProps={{
-                    shrink: true,
-                }}
+                InputLabelProps={{ shrink: true }}
                 style={{ marginBottom: '20px' }}
             />
             <Paper elevation={3} style={{ padding: '20px', marginBottom: '20px', position: 'relative' }}>
@@ -169,11 +188,8 @@ const DGHDynamicMain = () => {
                 <Button variant="contained" color="primary" onClick={sendRequest}>
                     Send
                 </Button>
-                <Button variant="outlined" color="secondary" onClick={reopenIframe}>
+                <Button variant="outlined" color="primary" onClick={reopenIframe}>
                     Re-open Iframe
-                </Button>
-                <Button variant="outlined" color="secondary" onClick={clearPreview}>
-                    Clear Preview
                 </Button>
             </Stack>
             {error && (
@@ -196,10 +212,12 @@ const DGHDynamicMain = () => {
                     )}
                 </Paper>
             )}
-            <Typography variant="h5" gutterBottom style={{ marginTop: '40px' }}>History</Typography>
-            <Button variant="outlined" color="secondary" onClick={clearHistory} style={{ marginTop: '10px' }}>
-                Clear History
-            </Button>
+            <Box display="flex" alignItems="center" marginTop="40px">
+                <Typography variant="h5" gutterBottom>History</Typography>
+                <Button variant="outlined" color="secondary" onClick={clearHistory} style={{ marginLeft: '10px' }}>
+                    Clear History
+                </Button>
+            </Box>
             {history.map((entry, index) => (
                 <Paper elevation={3} key={index} style={{ padding: '20px', marginTop: '20px', position: 'relative' }}>
                     <Box position="absolute" top="-8px" left="10px" bgcolor="white" px="5px">

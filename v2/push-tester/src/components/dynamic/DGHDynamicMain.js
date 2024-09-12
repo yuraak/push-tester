@@ -32,16 +32,15 @@ const DGHDynamicMain = () => {
     const [error, setError] = useState(null);
     const [isValid, setIsValid] = useState(null);
     const [history, setHistory] = useState([]);
-    const [nextRequestId, setNextRequestId] = useState(uuidv4()); // Initial UUID for the first request
+    const [nextRequestId, setNextRequestId] = useState(uuidv4());
 
-    // Function to update request and preview with a new requestId
     const updateRequestPreview = useCallback(() => {
         try {
             const details = JSON.parse(transactionLog);
             const request = {
                 gsId: details._meta.gsId,
                 gpId: "pop",
-                requestId: nextRequestId,  // Use the next generated request ID
+                requestId: nextRequestId,
                 command: "PTC_GetDetailedGameHistory",
                 data: {
                     playerId: details.playerId,
@@ -90,14 +89,11 @@ const DGHDynamicMain = () => {
             setResponse(res.data);
             setIsValid(valid);
 
-            // Log request, response, and endpoint in history
             setHistory(prev => [{ endpoint, request: formattedRequest, response: res.data, isValid: valid }, ...prev.slice(0, 9)]);
 
-            // Prepare the next request ID for the next request
             setNextRequestId(uuidv4());
-            updateRequestPreview(); // Update the preview with the new request ID
+            updateRequestPreview();
 
-            // Open URL in a popup if present
             if (res.data.data && res.data.data.url) {
                 window.open(res.data.data.url, '_blank', 'width=800,height=600,noopener,noreferrer');
             }
@@ -115,6 +111,16 @@ const DGHDynamicMain = () => {
         if (response && response.data && response.data.url) {
             window.open(response.data.url, '_blank', 'width=800,height=600,noopener,noreferrer');
         }
+    };
+
+    // New function to clear the preview
+    const clearPreview = () => {
+        setTransactionLog('');
+        setFormattedRequest({});
+        setEndpoint('');
+        setError(null);
+        setIsValid(null);
+        setResponse(null);
     };
 
     const renderTitle = (text) => (
@@ -165,6 +171,9 @@ const DGHDynamicMain = () => {
                 </Button>
                 <Button variant="outlined" color="secondary" onClick={reopenIframe}>
                     Re-open Iframe
+                </Button>
+                <Button variant="outlined" color="secondary" onClick={clearPreview}>
+                    Clear Preview
                 </Button>
             </Stack>
             {error && (

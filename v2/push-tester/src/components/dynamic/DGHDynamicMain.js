@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Typography, TextField, Button, Alert, Paper, Box, Stack, Switch, FormControlLabel } from '@mui/material';
+import { Container, Typography, TextField, Button, Alert, Paper, Box, Stack, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import Ajv from 'ajv';
@@ -33,7 +33,17 @@ const DGHDynamicMain = () => {
     const [isValid, setIsValid] = useState(null);
     const [history, setHistory] = useState([]);
     const [nextRequestId, setNextRequestId] = useState(uuidv4());
-    const [isV2, setIsV2] = useState(false);
+    const [inputMode, setInputMode] = useState('TPI v1'); // 'Manual', 'TPI v1', 'TPI v2'
+    
+    // State for manual inputs
+    const [manualInputs, setManualInputs] = useState({
+        gsId: '',
+        playerId: '',
+        skinId: '',
+        gameId: '',
+        gameCycleId: '',
+        gameCycleFinishDateTime: ''
+    });
 
     const mapV1Request = useCallback((details) => ({
         gsId: details._meta.gsId,
@@ -65,16 +75,39 @@ const DGHDynamicMain = () => {
         }
     }), [nextRequestId]);
 
+    const handleManualInputChange = (e) => {
+        const { name, value } = e.target;
+        setManualInputs((prev) => ({ ...prev, [name]: value }));
+    };
+
     const updateRequestPreview = useCallback(() => {
         try {
-            const details = JSON.parse(transactionLog);
-            const request = isV2 ? mapV2Request(details) : mapV1Request(details);
-            setFormattedRequest(request);
+            if (inputMode === 'Manual') {
+                // Create request from manual inputs
+                setFormattedRequest({
+                    gsId: manualInputs.gsId,
+                    gpId: "pop",
+                    requestId: nextRequestId,
+                    command: "PTC_GetDetailedGameHistory",
+                    data: {
+                        playerId: manualInputs.playerId,
+                        skinId: manualInputs.skinId,
+                        gameId: manualInputs.gameId,
+                        gameCycleId: manualInputs.gameCycleId,
+                        gameCycleFinishDateTime: manualInputs.gameCycleFinishDateTime,
+                        localeCode: "en"
+                    }
+                });
+            } else {
+                const details = JSON.parse(transactionLog);
+                const request = inputMode === 'TPI v2' ? mapV2Request(details) : mapV1Request(details);
+                setFormattedRequest(request);
+            }
         } catch (error) {
             console.error('Failed to parse transaction log:', error);
             setFormattedRequest({});
         }
-    }, [transactionLog, isV2, mapV1Request, mapV2Request]);
+    }, [transactionLog, inputMode, manualInputs, mapV1Request, mapV2Request, nextRequestId]);
 
     useEffect(() => {
         document.title = 'DGH PUSHER';
@@ -129,6 +162,14 @@ const DGHDynamicMain = () => {
         setTransactionLog('');
         setEndpoint('');
         setFormattedRequest({});
+        setManualInputs({
+            gsId: '',
+            playerId: '',
+            skinId: '',
+            gameId: '',
+            gameCycleId: '',
+            gameCycleFinishDateTime: ''
+        });
     };
 
     const reopenIframe = () => {
@@ -147,25 +188,90 @@ const DGHDynamicMain = () => {
         <Container>
             <Typography variant="h4" gutterBottom style={{ marginBottom: '20px' }}>DGH Pusher</Typography>
             <Box display="flex" alignItems="center" marginBottom="20px">
-                <FormControlLabel
-                    control={<Switch checked={isV2} onChange={(e) => setIsV2(e.target.checked)} />}
-                    label={`TPI ${isV2 ? 'v2' : 'v1'}`}
-                />
+                <FormControl style={{ minWidth: 120, marginRight: '10px' }}>
+                    <InputLabel>Input Mode</InputLabel>
+                    <Select value={inputMode} onChange={(e) => setInputMode(e.target.value)}>
+                        <MenuItem value="Manual">Manual</MenuItem>
+                        <MenuItem value="TPI v1">TPI v1</MenuItem>
+                        <MenuItem value="TPI v2">TPI v2</MenuItem>
+                    </Select>
+                </FormControl>
                 <Button variant="outlined" color="secondary" onClick={clearInput} style={{ marginLeft: '10px' }}>
                     Clear Input Data
                 </Button>
             </Box>
-            <TextField
-                label="Transaction Log"
-                name="transactionLog"
-                onChange={handleLogChange}
-                value={transactionLog}
-                multiline
-                variant="outlined"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                style={{ marginBottom: '20px' }}
-            />
+
+            {inputMode === 'Manual' ? (
+                <Box>
+                    <TextField
+                        label="gsId"
+                        name="gsId"
+                        value={manualInputs.gsId}
+                        onChange={handleManualInputChange}
+                        variant="outlined"
+                        fullWidth
+                        style={{ marginBottom: '10px' }}
+                    />
+                    <TextField
+                        label="playerId"
+                        name="playerId"
+                        value={manualInputs.playerId}
+                        onChange={handleManualInputChange}
+                        variant="outlined"
+                        fullWidth
+                        style={{ marginBottom: '10px' }}
+                    />
+                    <TextField
+                        label="skinId"
+                        name="skinId"
+                        value={manualInputs.skinId}
+                        onChange={handleManualInputChange}
+                        variant="outlined"
+                        fullWidth
+                        style={{ marginBottom: '10px' }}
+                    />
+                    <TextField
+                        label="gameId"
+                        name="gameId"
+                        value={manualInputs.gameId}
+                        onChange={handleManualInputChange}
+                        variant="outlined"
+                        fullWidth
+                        style={{ marginBottom: '10px' }}
+                    />
+                    <TextField
+                        label="gameCycleId"
+                        name="gameCycleId"
+                        value={manualInputs.gameCycleId}
+                        onChange={handleManualInputChange}
+                        variant="outlined"
+                        fullWidth
+                        style={{ marginBottom: '10px' }}
+                    />
+                    <TextField
+                        label="gameCycleFinishDateTime"
+                        name="gameCycleFinishDateTime"
+                        value={manualInputs.gameCycleFinishDateTime}
+                        onChange={handleManualInputChange}
+                        variant="outlined"
+                        fullWidth
+                        style={{ marginBottom: '10px' }}
+                    />
+                </Box>
+            ) : (
+                <TextField
+                    label="Transaction Log"
+                    name="transactionLog"
+                    onChange={handleLogChange}
+                    value={transactionLog}
+                    multiline
+                    variant="outlined"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    style={{ marginBottom: '20px' }}
+                />
+            )}
+
             <TextField
                 label="Push Endpoint"
                 name="endpoint"

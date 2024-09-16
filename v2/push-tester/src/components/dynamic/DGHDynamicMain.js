@@ -110,7 +110,7 @@ const DGHDynamicMain = () => {
     }, [transactionLog, inputMode, manualInputs, mapV1Request, mapV2Request, nextRequestId]);
 
     useEffect(() => {
-        document.title = 'DGH PUSHER';
+        document.title = 'DGH PUSHER / dynamic';
     }, []);
 
     useEffect(() => {
@@ -186,7 +186,7 @@ const DGHDynamicMain = () => {
 
     return (
         <Container>
-            <Typography variant="h4" gutterBottom style={{ marginBottom: '20px' }}>DGH Pusher</Typography>
+            <Typography variant="h4" gutterBottom style={{ marginBottom: '20px' }}>DGH Pusher / Dynamic Approach</Typography>
             <Box display="flex" alignItems="center" marginBottom="20px">
                 <FormControl style={{ minWidth: 120, marginRight: '10px' }}>
                     <InputLabel>Input Mode</InputLabel>

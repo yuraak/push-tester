@@ -1,70 +1,86 @@
-# Getting Started with Create React App
+# Push Tester
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## About the Project
+
+Push Tester is a React application designed for testing push notifications. It includes a proxy server for handling requests to external APIs, ensuring secure and efficient communication.
+
+## Project Structure
+
+- `src/`: Contains React application source code
+- `proxy-server/`: Contains the proxy server implementation
+- `.github/workflows/`: Contains GitHub Actions workflow for deployment
+
+## Setup and Installation
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/your-username/push-tester.git
+   cd push-tester
+   ```
+
+2. Install dependencies:
+   ```
+   npm install
+   ```
 
 ## Available Scripts
 
 In the project directory, you can run:
 
-### `npm start`
+- `npm start`: Runs the app in development mode
+- `npm test`: Launches the test runner
+- `npm run build`: Builds the app for production
+- `npm run start:proxy`: Starts the proxy server
+- `npm run start:react`: Starts only the React application
+- `npm run pm2:start`: Starts both React app and proxy server using PM2
+- `npm run pm2:stop`: Stops PM2 processes
+- `npm run pm2:restart`: Restarts PM2 processes
+- `npm run pm2:delete`: Deletes PM2 processes
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Proxy Server
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The proxy server runs on port 3002 and handles POST requests to the `/proxy` endpoint. It forwards requests to specified external APIs and manages error handling.
 
-### `npm test`
+### Usage
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Send a POST request to `http://localhost:3002/proxy` with the following body:
 
-### `npm run build`
+## Deployment
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The project is set up for automatic deployment to a VPS when pushing to the `build` branch using GitHub Actions.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Deployment Process:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Push to the `build` branch triggers the GitHub Actions workflow.
+2. The workflow builds the project and deploys it to the VPS.
+3. On the VPS, the application is started using PM2.
 
-### `npm run eject`
+### Manual Deployment:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+For manual deployment, SSH into your VPS and run:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
+cd ~/push-tester
+git pull origin main
+npm ci
+npm run build
+npm run pm2:stop || true
+npm run pm2:delete || true
+npm run pm2:start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Environment Variables
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Ensure the following environment variables are set in your deployment environment:
 
-## Learn More
+- `VPS_HOST`: Your VPS host address
+- `VPS_USERNAME`: SSH username for your VPS
+- `VPS_SSH_KEY`: SSH private key for authentication
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Contributing
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Code Splitting
+## License
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This project is licensed under the MIT License.

@@ -19,7 +19,7 @@ jobs:
         node-version: '14'
         
     - name: Установка зависимостей
-      run: npm ci
+      run: npm install
       
     - name: Сборка проекта
       run: npm run build

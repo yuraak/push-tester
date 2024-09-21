@@ -18,8 +18,26 @@ jobs:
       with:
         node-version: '14'
         
+    - name: Кэширование зависимостей npm
+      uses: actions/cache@v2
+      with:
+        path: ~/.npm
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/package.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-node-
+        
     - name: Установка зависимостей
       run: npm install
+      
+    - name: Кэширование сборки
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.npm
+          ${{ github.workspace }}/build
+        key: ${{ runner.os }}-react-build-${{ hashFiles('**/package.json') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+        restore-keys: |
+          ${{ runner.os }}-react-build-${{ hashFiles('**/package.json') }}-
       
     - name: Сборка проекта
       run: npm run build

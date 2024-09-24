@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Typography, TextField, Checkbox, FormControlLabel, Paper, Box, Stack, Button, Grid } from '@mui/material';
+import { Link } from 'react-router-dom';
+import queryString from 'query-string';
 
 const DGHStaticMain = () => {
     const [baseUrl, setBaseUrl] = useState('');
@@ -48,19 +50,21 @@ const DGHStaticMain = () => {
     };
 
     const updateUrlPreview = useCallback(() => {
-        let url = baseUrl;
-        const params = [];
+        const [urlWithoutQuery, query] = baseUrl.split('?');
+        const existingParams = queryString.parse(query);
+        const params = { ...existingParams };
+
         for (const key in selectedParameters) {
             if (selectedParameters[key]) {
                 const name = parameterValues[key].name || key;
                 const value = parameterValues[key].value || '';
-                params.push(`${name}=${encodeURIComponent(value)}`);
+                params[name] = value;
             }
         }
-        if (params.length > 0) {
-            url += '?' + params.join('&');
-        }
-        setUrlPreview(url);
+
+        const queryStringified = queryString.stringify(params);
+        const finalUrl = queryStringified ? `${urlWithoutQuery}?${queryStringified}` : urlWithoutQuery;
+        setUrlPreview(finalUrl);
     }, [baseUrl, selectedParameters, parameterValues]);
 
     useEffect(() => {
@@ -78,7 +82,17 @@ const DGHStaticMain = () => {
 
     return (
         <Container>
-            <Typography variant="h4" gutterBottom style={{ marginBottom: '20px' }}>DGH Pusher / Static Approach</Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom="20px">
+                <Typography variant="h4" gutterBottom>DGH Pusher / Static Approach</Typography>
+                <Box>
+                    <Button component={Link} to="/dynamic" variant="outlined" color="primary" style={{ marginRight: '10px' }}>
+                        Dynamic Approach
+                    </Button>
+                    <Button component={Link} to="/" variant="outlined" color="secondary">
+                        Home
+                    </Button>
+                </Box>
+            </Box>
             <TextField
                 label="Base URL"
                 name="baseUrl"

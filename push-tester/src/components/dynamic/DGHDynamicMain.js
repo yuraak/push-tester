@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Typography, TextField, Button, Alert, Paper, Box, Stack, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import Ajv from 'ajv';
@@ -186,7 +187,17 @@ const DGHDynamicMain = () => {
 
     return (
         <Container>
-            <Typography variant="h4" gutterBottom style={{ marginBottom: '20px' }}>DGH Pusher / Dynamic Approach</Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center" marginBottom="20px">
+                <Typography variant="h4" gutterBottom>DGH Pusher / Dynamic Approach</Typography>
+                <Box>
+                    <Button component={Link} to="/static" variant="outlined" color="primary" style={{ marginRight: '10px' }}>
+                        Static Approach
+                    </Button>
+                    <Button component={Link} to="/" variant="outlined" color="secondary">
+                        Home
+                    </Button>
+                </Box>
+            </Box>
             <Box display="flex" alignItems="center" marginBottom="20px">
                 <FormControl style={{ minWidth: 120, marginRight: '10px' }}>
                     <InputLabel>Input Mode</InputLabel>

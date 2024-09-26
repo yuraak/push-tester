@@ -22,7 +22,7 @@ WORKDIR /app
 
 # Copy only the necessary files from the build stage
 COPY --from=build /app/package*.json ./
-COPY --from=build /app/build ./public
+COPY --from=build /app/public ./public
 COPY --from=build /app/src ./src 
 COPY --from=build /app/proxy-server ./proxy-server 
 

@@ -44,5 +44,4 @@ jobs:
           sudo docker load < /home/ubuntu/image.tar
           sudo docker stop push-tester || true
           sudo docker rm push-tester || true
-          docker run -d --name push-tester -p 3000:80 -p 3000:3000 -p 3002:3002 push-tester
-  
+          sudo docker run -d --name push-tester -p 80:3000 -p 3000:3000 -p 3002:3002 push-tester

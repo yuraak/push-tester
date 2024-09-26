@@ -1,6 +1,9 @@
 name: Развертывание на VPS
 
 on:
+  push:
+    branches:
+      - build
   workflow_dispatch:
 
 jobs:

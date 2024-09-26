@@ -1,0 +1,47 @@
+name: Build and Deploy Docker Image
+
+on:
+  push:
+    branches:
+      - build  # Trigger the action on push to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    # - name: Log in to DockerHub
+    #   run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+    #   # Add DOCKERHUB_PASSWORD and DOCKERHUB_USERNAME in the repository secrets if you want to push the image to DockerHub
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t push-tester .
+        docker save push-tester > image.tar
+
+    - name: Copy Docker image to VPS
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        source: "./image.tar"
+        target: "~/"
+
+    - name: Load Docker image on VPS and deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          docker load < ~/image.tar
+          docker stop push-tester || true
+          docker rm push-tester || true
+          docker run -d --name push-tester -p 3000:80 -p 3000:3000 -p 3002:3002 push-tester

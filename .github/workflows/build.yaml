@@ -41,7 +41,8 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          docker load < ~/image.tar
-          docker stop push-tester || true
-          docker rm push-tester || true
+          sudo docker load < /home/ubuntu/image.tar
+          sudo docker stop push-tester || true
+          sudo docker rm push-tester || true
           docker run -d --name push-tester -p 3000:80 -p 3000:3000 -p 3002:3002 push-tester
+  

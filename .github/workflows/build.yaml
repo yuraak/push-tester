@@ -18,8 +18,9 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
+    # Log in to GHCR using Personal Access Token (PAT)
     - name: Log in to GitHub Container Registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
     - name: Build Docker image
       run: docker build -t ghcr.io/${{ github.repository_owner }}/push-tester:latest .
@@ -34,8 +35,9 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          sudo docker login ghcr.io -u ${{ secrets.GITHUB_USERNAME }} -p ${{ secrets.GITHUB_TOKEN }}
-          sudo docker pull ghcr.io/${{ github.repository_owner }}/push-tester:latest
+          # Log in to GHCR from VPS using PAT
+          sudo docker login ghcr.io -u ${{ secrets.GITHUB_USERNAME }} -p ${{ secrets.GHCR_PAT }}
+          sudo docker pull ghcr.io/${{ github.repository_owner }}/push-ttester:latest
           sudo docker stop push-tester || true
           sudo docker rm push-tester || true
           sudo docker run -d --name push-tester -p 80:3000 -p 3000:3000 -p 3002:3002 ghcr.io/${{ github.repository_owner }}/push-tester:latest

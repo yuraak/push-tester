@@ -34,8 +34,8 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          docker login ghcr.io -u ${{ secrets.GITHUB_USERNAME }} -p ${{ secrets.GITHUB_TOKEN }}
-          docker pull ghcr.io/${{ github.repository_owner }}/push-tester:latest
-          docker stop push-tester || true
-          docker rm push-tester || true
-          docker run -d --name push-tester -p 80:3000 -p 3000:3000 -p 3002:3002 ghcr.io/${{ github.repository_owner }}/push-tester:latest
+          sudo docker login ghcr.io -u ${{ secrets.GITHUB_USERNAME }} -p ${{ secrets.GITHUB_TOKEN }}
+          sudo docker pull ghcr.io/${{ github.repository_owner }}/push-tester:latest
+          sudo docker stop push-tester || true
+          sudo docker rm push-tester || true
+          sudo docker run -d --name push-tester -p 80:3000 -p 3000:3000 -p 3002:3002 ghcr.io/${{ github.repository_owner }}/push-tester:latest

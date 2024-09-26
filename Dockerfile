@@ -27,7 +27,6 @@ COPY --from=build /app/package*.json ./
 RUN npm ci --only=production
 
 # Copy the build folder and any other files required for production
-COPY --from=build /app/build ./build
 COPY --from=build /app/proxy-server ./proxy-server 
 
 # Expose ports (3000 for frontend, 3002 for proxy)

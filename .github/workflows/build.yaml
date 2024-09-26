@@ -37,7 +37,7 @@ jobs:
         script: |
           # Log in to GHCR from VPS using PAT
           sudo docker login ghcr.io -u ${{ secrets.GITHUB_USERNAME }} -p ${{ secrets.GHCR_PAT }}
-          sudo docker pull ghcr.io/${{ github.repository_owner }}/push-ttester:latest
-          sudo docker stop push-tester || true
+          sudo docker pull ghcr.io/${{ github.repository_owner }}/push-tester:latest
+          sudo docker stop push-tester || tru
           sudo docker rm push-tester || true
           sudo docker run -d --name push-tester -p 80:3000 -p 3000:3000 -p 3002:3002 ghcr.io/${{ github.repository_owner }}/push-tester:latest

@@ -3,7 +3,7 @@ name: Build and Deploy Docker Image
 on:
   push:
     branches:
-      - build  # Trigger the action on push to the main branch
+      - build  # Trigger the action on push to the build branch
 
 jobs:
   build:
@@ -16,32 +16,24 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
-    # - name: Log in to DockerHub
-    #   run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-    #   # Add DOCKERHUB_PASSWORD and DOCKERHUB_USERNAME in the repository secrets if you want to push the image to DockerHub
+    - name: Log in to GitHub Container Registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Build and push Docker image
-      run: |
-        docker build -t push-tester .
-        docker save push-tester > image.tar
+    - name: Build Docker image
+      run: docker build -t ghcr.io/${{ github.repository_owner }}/push-tester:latest .
 
-    - name: Copy Docker image to VPS
-      uses: appleboy/scp-action@v0.1.3
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        source: "./image.tar"
-        target: "home/ubuntu/image.tar"
+    - name: Push Docker image to GitHub Container Registry
+      run: docker push ghcr.io/${{ github.repository_owner }}/push-tester:latest
 
-    - name: Load Docker image on VPS and deploy
+    - name: SSH to VPS and Deploy
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.VPS_HOST }}
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          sudo docker load < /home/ubuntu/image.tar
-          sudo docker stop push-tester || true
-          sudo docker rm push-tester || true
-          sudo docker run -d --name push-tester -p 80:3000 -p 3000:3000 -p 3002:3002 push-tester
+          docker login ghcr.io -u ${{ secrets.GITHUB_USERNAME }} -p ${{ secrets.GITHUB_TOKEN }}
+          docker pull ghcr.io/${{ github.repository_owner }}/push-tester:latest
+          docker stop push-tester || true
+          docker rm push-tester || true
+          docker run -d --name push-tester -p 80:3000 -p 3000:3000 -p 3002:3002 ghcr.io/${{ github.repository_owner }}/push-tester:latest

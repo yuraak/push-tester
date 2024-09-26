@@ -1,9 +1,10 @@
-name: reboot
+name: Развертывание на VPS
+
 on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  reboot:
     runs-on: ubuntu-latest
     
     steps:

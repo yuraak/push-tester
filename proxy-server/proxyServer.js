@@ -3,7 +3,7 @@ const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3001;  // Default to 3001 if PORT is not set
+const PORT = process.env.PROXY_PORT || 3001; // Use 3001 for the proxy server
 
 app.use(cors());
 app.use(express.json());

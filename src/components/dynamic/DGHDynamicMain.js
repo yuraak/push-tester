@@ -25,6 +25,9 @@ const dghResponseSchema = {
     required: ['gsId', 'gpId', 'requestId', 'command', 'data']
 };
 
+// Use environment variable for the proxy base URL, default to localhost if not set
+const PROXY_BASE_URL = process.env.REACT_APP_PROXY_BASE_URL || 'http://localhost:3002';
+
 const DGHDynamicMain = () => {
     const [transactionLog, setTransactionLog] = useState('');
     const [endpoint, setEndpoint] = useState('');
@@ -132,7 +135,7 @@ const DGHDynamicMain = () => {
             setIsValid(null);
             setResponse(null);
 
-            const res = await axios.post('http://localhost:3002/proxy', {
+            const res = await axios.post(`${PROXY_BASE_URL}/proxy`, {
                 endpoint: endpoint,
                 data: formattedRequest
             });

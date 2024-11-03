@@ -3,7 +3,7 @@ const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 3002; // Use the environment-provided port
+const PORT = process.env.PORT || 3001;  // Default to 3001 if PORT is not set
 
 app.use(cors());
 app.use(express.json());
